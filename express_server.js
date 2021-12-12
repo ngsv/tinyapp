@@ -10,8 +10,18 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// This method doesn't generate uppercase characters
+// const generateRandomString = () => {
+//   return Math.random().toString(36).slice(2, 8);
+// };
+
 const generateRandomString = () => {
-  return Math.random().toString(36).slice(2, 8);
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let newString = '';
+  for (let i = 0; i < 6; i++) {
+    newString += characters.charAt(Math.floor(Math.random() * 62));
+  }
+  return newString;
 };
 
 app.get("/", (req, res) => {
@@ -28,13 +38,18 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  let newShortURL = generateRandomString();
+  urlDatabase[newShortURL] = req.body.longURL;
   console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  //res.redirect(`/u/${newShortURL}`);
+  res.redirect("/urls");
 });
 
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  res.render('urls_show', templateVars);
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  //const templateVars = { shortURL: req.params.shortURL, longURL: longURL };
+  //res.render('urls_show', templateVars);
+  res.redirect(longURL);
 });
 
 app.get("/urls.json", (req, res) => {
