@@ -7,9 +7,21 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
+// Previous urLDatabase object structure
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
+  }
 };
 
 const users = {
@@ -61,53 +73,110 @@ const passwordLookup = (users, email, password) => {
   return false;
 };
 
+const urlsForUser = (id) => {
+  let filtered = {};
+  let allKeys = Object.keys(urlDatabase);
+  for (let i = 0; i < allKeys.length; i++) {
+    if (urlDatabase[allKeys[i]]["userID"] === id) {
+      filtered[allKeys[i]] = urlDatabase[allKeys[i]];
+    }
+  }
+  console.log(filtered);
+  return filtered;
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies.user_id]
-  };
-  console.log(req.cookies.user_id);
-  res.render('urls_index', templateVars);
+  if (req.cookies.user_id === undefined) {
+    res.send("Error: please log in or register to view URLs.");
+  } else {
+    const templateVars = {
+      urls: urlsForUser(req.cookies.user_id),
+      user: users[req.cookies.user_id]
+    };
+    res.render('urls_index', templateVars);
+  }
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id]
-  };
-  res.render('urls_new', templateVars);
+  if (req.cookies.user_id === undefined) {
+    res.redirect('/login');
+  } else {
+    const templateVars = {
+      user: users[req.cookies.user_id]
+    };
+    res.render('urls_new', templateVars);
+  }
 });
 
 app.post("/urls", (req, res) => {
-  let newShortURL = generateRandomString();
-  urlDatabase[newShortURL] = req.body.longURL;
-  console.log(req.body);  // Log the POST request body to the console
-  //res.redirect(`/u/${newShortURL}`);
-  res.redirect("/urls");
+  if (req.cookies.user_id === undefined) {
+    res.send('Only registered users can shorten URLs');
+  } else {
+    let newShortURL = generateRandomString();
+    urlDatabase[newShortURL] = {};
+    urlDatabase[newShortURL]["longURL"] = req.body.longURL;
+    urlDatabase[newShortURL]["userID"] = req.cookies.user_id;
+    //console.log(req.body);  // Log the POST request body to the console
+    console.log(urlDatabase);
+    res.redirect("/urls");
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  //const templateVars = { shortURL: req.params.shortURL, longURL: longURL };
-  //res.render('urls_show', templateVars);
-  res.redirect(longURL);
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    res.send("Error: shortened link invalid.");
+  } else {
+    const longURL = urlDatabase[req.params.shortURL]["longURL"];
+    res.redirect(longURL);
+  }
+});
+
+app.get("/urls/:shortURL", (req, res) => {
+  if (req.cookies.user_id === undefined) {
+    res.send("Error: please log in or register to view URLs.");
+  } else {
+    const filteredDatabase = urlsForUser(req.cookies.user_id);
+    if (filteredDatabase[req.params.shortURL] === undefined) {
+      res.send("Error: the requested URL does not exist or does not belong to you.");
+    } else {
+      const longURL = filteredDatabase[req.params.shortURL]["longURL"];
+      const templateVars = {
+        shortURL: req.params.shortURL,
+        longURL: longURL,
+        user: users[req.cookies.user_id]
+      };
+      res.render('urls_show', templateVars);
+    }
+  }
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: longURL
-  };
-  res.render('urls_show', templateVars);
+  const filteredDatabase = urlsForUser(req.cookies.user_id);
+  if (filteredDatabase[req.params.shortURL] === undefined) {
+    res.send("Error: the requested URL does not exist or does not belong to you.");
+  } else {
+    const longURL = urlDatabase[req.params.shortURL]["longURL"];
+    const templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: longURL,
+      user: users[req.cookies.user_id]
+    };
+    res.render('urls_show', templateVars);
+  }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
+  const filteredDatabase = urlsForUser(req.cookies.user_id);
+  if (filteredDatabase[req.params.shortURL] === undefined) {
+    res.send("Error: the requested URL does not exist or does not belong to you.");
+  } else {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect("/urls");
+  }
 });
 
 app.get("/urls.json", (req, res) => {
