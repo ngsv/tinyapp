@@ -1,23 +1,22 @@
 
 const generateRandomString = () => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let newString = '';
+  let randomString = '';
   for (let i = 0; i < 6; i++) {
-    newString += characters.charAt(Math.floor(Math.random() * 62));
+    randomString += characters.charAt(Math.floor(Math.random() * characters.length));
   }
-  return newString;
+  return randomString;
 };
 
-const getUserByEmail = function(email, database) {
+const getUserByEmail = (email, database) => {
   let user = {};
-  let userKeys = Object.keys(database);
-
-  for (let i = 0; i < userKeys.length; i++) {
-    if (database[userKeys[i]]["email"] === email) {
-      user = database[userKeys[i]];
+  for (const u in database) {
+    if (database[u].email === email) {
+      user = database[u];
       return user;
     }
   }
+  return null;
 };
 
 module.exports = {

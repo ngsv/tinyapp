@@ -10,26 +10,18 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if (user) { %>
-      <form class="form-inline" action="/logout" method="post">
-        <div class="">
-          <strong>Logged In As: <%= user.email %>&nbsp;&nbsp;&nbsp;</strong>
-          <button class="btn btn-outline-dark" type="submit" name="button">Logout</button>
-        </div>
-      </form>
+    <% if (user_id) { %>
+      <div>
+        <form action="/logout" method="post">
+          <strong>Logged In As: <%= user_id.email %>&nbsp;&nbsp;&nbsp;</strong>
+          <button class="btn btn-outline-dark" type="submit" name="logoutButton">Logout</button>
+        </form>
+      </div>
     <% } else { %>
-      <form class="form-inline" action="/register" method="get">
-        <div class="">
-          <button class="btn btn-outline-dark mr-1" type="submit" name="button">Register</button>
-        </div>
-      </form>
-      <form class="form-inline" action="/login" method="get">
-        <div class="">
-          <button class="btn btn-outline-dark" type="submit" name="button">Login</button>
-        </div>
-      </form>
+      <div class="navbar-nav">
+        <a class="nav-item nav-link" href="/register">Register</a>
+        <a class="nav-item nav-link" href="/login">Login</a>
+      </div>
     <% } %>
   </nav>
 </header>
-
-<!-- <input class="form-control" type="text" name="user_id" placeholder="Username"> -->
