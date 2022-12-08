@@ -1,4 +1,5 @@
 const express = require("express");
+const methodOverride = require('method-override');
 const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
@@ -15,6 +16,9 @@ app.use(cookieSession({
   name: 'session',
   keys: ['secret']
 }));
+
+// override with POST having ?_method=DELETE
+app.use(methodOverride('_method'));
 
 const urlDatabase = {
   'b6UTxQ': {
@@ -96,7 +100,6 @@ app.post("/urls", (req, res) => { // add a new URL
     urlDatabase[shortURL] = {};
     urlDatabase[shortURL].longURL = req.body.longURL;
     urlDatabase[shortURL].userID = req.session.user_id;
-    console.log(urlDatabase);
     res.redirect(`/urls/${shortURL}`);
   }
 });
@@ -125,7 +128,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   if (!(req.session.user_id)) {
     res.send("<h1>You must be logged in to make changes to a URL.</h1>");
   } else {
@@ -134,7 +137,7 @@ app.post("/urls/:id", (req, res) => {
   }
 });
 
-app.post("/urls/:id/delete", (req, res) => { // delete a URL from the list
+app.delete("/urls/:id", (req, res) => { // delete a URL from the list
   if (!(req.params.id in urlDatabase)) {
     res.send("<h1>The shorted URL does not exist. Please check that the short URL has been entered correctly.</h1>");
   } else if (!(req.session.user_id)) {
