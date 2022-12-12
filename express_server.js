@@ -17,7 +17,7 @@ app.use(cookieSession({
   keys: ['secret']
 }));
 
-// override with POST having ?_method=DELETE
+// override with POST having ?_method=DELETE and ?_method=PUT
 app.use(methodOverride('_method'));
 
 const urlDatabase = {
